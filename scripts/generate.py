@@ -2,12 +2,12 @@ from tokenizers import Tokenizer
 from src.utils.model_utils import load_model
 from src.inference.generator import Generator
 
-MODEL_DIR = "models/debug-1/checkpoint_3"
-TOKENIZER_PATH = "models/debug-1/tokenizer.json"
+MODEL_DIR = "models/base-1/checkpoint_4"
+TOKENIZER_PATH = "models/base-1/tokenizer.json"
 PROMPT = """
-Dzisiaj pogoda jest
+Miłość jest jak
 """
-MAX_NEW_TOKENS = 20
+MAX_NEW_TOKENS = 32
 TEMPERATURE = 1.0
 
 

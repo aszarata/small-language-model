@@ -8,10 +8,10 @@ from src.data.text_dataset import TextDataset
 from src.utils.model_utils import load_model
 from tokenizers import Tokenizer
 
-CONFIG_FILE = "configs/debug.yaml"
+CONFIG_FILE = "configs/base.yaml"
 TOKENIZER_PATH = "tokenizers/bpe-test-40000/tokenizer.json"
-DATA_DIR = "data/debug"
-SAVE_MODEL_DIR = "models/debug-1"
+DATA_DIR = "data/base/train"
+SAVE_MODEL_DIR = "models/base-1"
 
 def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None):
 
@@ -45,7 +45,8 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None
 
     train_loader = DataLoader(
         dataset=dataset, 
-        batch_size=config["training"]["batch_size"]
+        batch_size=config["training"]["batch_size"],
+        shuffle=True
     )
 
     # Training
@@ -53,7 +54,7 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None
         model.parameters(),
         lr=float(config["training"]["learning_rate"])
     )
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.CrossEntropyLoss(ignore_index=tokenizer.token_to_id("<pad>"))
 
     trainer = Trainer(
         model=model,

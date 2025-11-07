@@ -26,21 +26,23 @@ class Trainer:
     def train_epoch(self, dataloader: DataLoader):
         self.model.train()
         total_loss = 0
-        for (x, y) in tqdm(dataloader, desc="Training"):
-            x, y = x.to(self.device), y.to(self.device)
-            self.optimizer.zero_grad()
-            with torch.autocast(device_type="mps", dtype=torch.float16):
+        with tqdm(dataloader, desc="Training") as pbar:
+            for (x, y) in pbar:
+                x, y = x.to(self.device), y.to(self.device)
+                self.optimizer.zero_grad()
+                
                 out = self.model(x)
                 loss = self.criterion(
                     out.view(-1, out.size(-1)), 
                     y.view(-1)
                 )
 
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
 
-            self.optimizer.step()
-            total_loss += loss.item()
+                self.optimizer.step()
+                pbar.set_postfix(loss=loss.item())
+                total_loss += loss.item()
 
         return total_loss / len(dataloader)
 

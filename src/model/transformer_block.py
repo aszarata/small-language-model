@@ -9,7 +9,8 @@ class TransformerBlock(nn.Module):
 
         self.m_attention = nn.MultiheadAttention(
             embed_dim=embed_dim,
-            num_heads=num_heads
+            num_heads=num_heads,
+            batch_first=True
         )
         self.dropout = nn.Dropout(dropout_prob)
 
