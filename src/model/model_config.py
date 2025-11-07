@@ -19,3 +19,10 @@ class LanguageModelConfig:
     def load(cls, path):
         with open(path, 'r') as f:
             return cls(**json.load(f))
+        
+    def __str__(self):
+        config_dict = asdict(self)
+        lines = ["LanguageModel configuration:"]
+        for key, value in config_dict.items():
+            lines.append(f"  {key}: {value}")
+        return "\n".join(lines)

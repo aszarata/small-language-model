@@ -18,4 +18,4 @@ def download_pretrained_tokenizer(output_dir, output_name, tokenizer_url):
     try:
         tokenizer = Tokenizer.from_file(f"{output_dir}/{output_name}")
     except Exception as e:
-        print(f"Invalid tokenizer.json formatting. Exception: {e}")
+        Exception(f"Invalid tokenizer.json formatting. Exception: {e}")

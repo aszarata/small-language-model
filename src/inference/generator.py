@@ -31,3 +31,7 @@ class Generator:
                     break   
 
         return self.tokenizer.decode(input_tokens[0].tolist())
+    
+    def batch_generate(self, prompts: str, **kwargs):
+        results = [self.generate(prompt,  **kwargs) for prompt in prompts]
+        return results

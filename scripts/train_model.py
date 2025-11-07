@@ -8,10 +8,10 @@ from src.data.text_dataset import TextDataset
 from src.utils.model_utils import load_model
 from tokenizers import Tokenizer
 
-CONFIG_FILE = "configs/base.yaml"
-TOKENIZER_PATH = "tokenizers/bpe-test-40000/tokenizer.json"
-DATA_DIR = "data/base/train"
-SAVE_MODEL_DIR = "models/base-1"
+CONFIG_FILE = "configs/debug.yaml"
+TOKENIZER_PATH = "tokenizers/whitespace.json"
+DATA_DIR = "data/debug"
+SAVE_MODEL_DIR = "models/debug-1"
 MODEL_PATH = None
 
 def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None):
@@ -61,13 +61,13 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None
         model=model,
         tokenizer=tokenizer,
         optimizer=optimizer,
-        criterion=criterion
+        criterion=criterion,
+        model_dir=save_model_dir,
     )
     
     trainer.fit(
         train_loader=train_loader,
         epochs=config["training"]["epochs"],
-        model_dir=save_model_dir
     )
 
     

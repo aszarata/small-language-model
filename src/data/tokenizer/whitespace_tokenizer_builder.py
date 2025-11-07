@@ -9,7 +9,10 @@ class WhitespaceTokenizerBuilder(TokenizerBuilder):
     def build(self, paths, output_path):
         tokenizer = Tokenizer(models.WordLevel(unk_token="<unk>"))
         tokenizer.pre_tokenizer = pre_tokenizers.WhitespaceSplit()
-        trainer = trainers.WordLevelTrainer(vocab_size=self.vocab_size, special_tokens=["<unk>"])
+        trainer = trainers.WordLevelTrainer(
+            vocab_size=self.vocab_size, 
+            special_tokens=["<pad>", "<s>", "</s>", "<unk>", "<mask>"]
+        )
 
         tokenizer.train(files=paths, trainer=trainer)
         tokenizer.save(output_path)

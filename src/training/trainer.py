@@ -1,11 +1,11 @@
 import os
-from pathlib import Path
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from src.utils.logger import setup_logger
 
 class Trainer:
-    def __init__(self, model, optimizer, criterion, tokenizer, device=None):
+    def __init__(self, model, optimizer, criterion, tokenizer, device=None, model_dir=None):
         if not device:
             if torch.backends.mps.is_available():
                 device = 'mps'
@@ -22,7 +22,10 @@ class Trainer:
         self.tokenizer = tokenizer
         self.current_epoch = 0
 
+        self.logger = setup_logger(name="Trainer", log_dir=f"{model_dir}/logs/training")
         self.model_dir = None
+
+        self.save_tokenizer()
 
     def train_epoch(self, dataloader: DataLoader):
         self.model.train()
@@ -62,18 +65,19 @@ class Trainer:
                 total_loss += loss.item()
         return total_loss / len(dataloader)
 
-    def fit(self, train_loader, val_loader=None, epochs=10, model_dir=None):
-        self.model_dir = model_dir
-        self.save_tokenizer()
-        print(f"Starting training for {epochs} epochs. Using device {self.device}")
-        
+    def fit(self, train_loader, val_loader=None, epochs=10):
         start_epoch = self.current_epoch + 1
         end_epoch = self.current_epoch + epochs + 1
+
+        self.logger.info(f"Training started for epochs: {start_epoch} - {end_epoch-1}")
+        self.logger.info(f"{self.model.config}") 
+        self.logger.info(f"Using device {self.device}")
+    
         for epoch in range(start_epoch, end_epoch):
             self.current_epoch = epoch
             train_loss = self.train_epoch(train_loader)
             val_loss = self.eval_epoch(val_loader) if val_loader else None
-            print(f"Epoch {epoch}: train_loss={train_loss:.4f}" + (f", val_loss={val_loss:.4f}" if val_loss else ""))
+            self.logger.info(f"Epoch {epoch}: train_loss={train_loss:.4f}" + (f", val_loss={val_loss:.4f}" if val_loss else ""))
             self.save_snapshot()
 
     def save_snapshot(self):
