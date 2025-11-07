@@ -20,6 +20,7 @@ class Trainer:
         self.optimizer = optimizer
         self.criterion = criterion
         self.tokenizer = tokenizer
+        self.current_epoch = 0
 
         self.model_dir = None
 
@@ -65,16 +66,20 @@ class Trainer:
         self.model_dir = model_dir
         self.save_tokenizer()
         print(f"Starting training for {epochs} epochs. Using device {self.device}")
-        for epoch in range(1, epochs + 1):
+        
+        start_epoch = self.current_epoch + 1
+        end_epoch = self.current_epoch + epochs + 1
+        for epoch in range(start_epoch, end_epoch):
+            self.current_epoch = epoch
             train_loss = self.train_epoch(train_loader)
             val_loss = self.eval_epoch(val_loader) if val_loader else None
             print(f"Epoch {epoch}: train_loss={train_loss:.4f}" + (f", val_loss={val_loss:.4f}" if val_loss else ""))
-            self.save_snapshot(epoch)
+            self.save_snapshot()
 
-    def save_snapshot(self, epoch):
+    def save_snapshot(self):
         if not self.model_dir:
             return
-        output_dir = f"{self.model_dir}/checkpoint_{epoch}"
+        output_dir = f"{self.model_dir}/checkpoint_{self.current_epoch}"
         os.makedirs(output_dir, exist_ok=True)
 
         self.model.config.save(f"{output_dir}/config.json")

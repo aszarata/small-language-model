@@ -12,6 +12,7 @@ CONFIG_FILE = "configs/base.yaml"
 TOKENIZER_PATH = "tokenizers/bpe-test-40000/tokenizer.json"
 DATA_DIR = "data/base/train"
 SAVE_MODEL_DIR = "models/base-1"
+MODEL_PATH = None
 
 def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None):
 
@@ -75,5 +76,6 @@ if __name__ == "__main__":
         config_file=CONFIG_FILE,
         tokenizer_path=TOKENIZER_PATH,
         data_dir=DATA_DIR,
-        save_model_dir=SAVE_MODEL_DIR
+        save_model_dir=SAVE_MODEL_DIR,
+        model_path=MODEL_PATH
     )

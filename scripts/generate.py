@@ -2,11 +2,9 @@ from tokenizers import Tokenizer
 from src.utils.model_utils import load_model
 from src.inference.generator import Generator
 
-MODEL_DIR = "models/base-1/checkpoint_4"
+MODEL_DIR = "models/base-1/checkpoint_10"
 TOKENIZER_PATH = "models/base-1/tokenizer.json"
-PROMPT = """
-Miłość jest jak
-"""
+PROMPT = """Dlaczego. """
 MAX_NEW_TOKENS = 32
 TEMPERATURE = 1.0
 
