@@ -1,27 +1,21 @@
-from tokenizers.models import BPE
-from tokenizers import Tokenizer
-from tokenizers.pre_tokenizers import ByteLevel
-from tokenizers.decoders import ByteLevel as ByteLevelDecoder
-from tokenizers.trainers import BpeTrainer
+import json
+import requests
 from pathlib import Path
-import os
+from tokenizers import Tokenizer
 
-def build_byte_level_bpe_tokenizer(data_dir, vocab_size=40000, min_frequency=2, output_dir="tokenizers"):
-    paths = [str(p) for p in Path(data_dir).rglob("*.txt")]
-
-    tokenizer = Tokenizer(BPE(unk_token="<unk>"))
-    tokenizer.pre_tokenizer = ByteLevel()
-    tokenizer.decoder = ByteLevelDecoder()
-
-    trainer = BpeTrainer(
-        vocab_size=vocab_size,
-        min_frequency=min_frequency,
-        special_tokens=["<s>", "<pad>", "</s>", "<unk>", "<mask>"]
-    )
-
-    tokenizer.train(paths, trainer)
-
-    os.makedirs(output_dir, exist_ok=True)
-    tokenizer.save(f"{output_dir}/tokenizer.json")
-
-    return output_dir
+def download_pretrained_tokenizer(output_dir, output_name, tokenizer_url):
+    response = requests.get(tokenizer_url)
+    
+    if response.status_code == 200:
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        
+        with open(f"{output_dir}/{output_name}", "w") as f:
+            json.dump(response.json(), f)
+    
+    else:
+        raise Exception(f"Error while processing request: {response.status_code}")
+    
+    try:
+        tokenizer = Tokenizer.from_file(f"{output_dir}/{output_name}")
+    except Exception as e:
+        print(f"Invalid tokenizer.json formatting. Exception: {e}")
