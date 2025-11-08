@@ -8,13 +8,13 @@ from src.data.text_dataset import TextDataset
 from src.utils.model_utils import load_model
 from tokenizers import Tokenizer
 
-CONFIG_FILE = "configs/debug.yaml"
-TOKENIZER_PATH = "tokenizers/whitespace.json"
-DATA_DIR = "data/debug"
-SAVE_MODEL_DIR = "models/debug-1"
-MODEL_PATH = None
+CONFIG_FILE = "configs/base.yaml"
+TOKENIZER_PATH = "tokenizers/bpe.json"
+DATA_DIR = "data/base/train"
+SAVE_MODEL_DIR = "models/model-bpe"
+PRETRAINED_MODEL_PATH = "models/model-bpe/checkpoint_6"
 
-def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None):
+def train(config_file, tokenizer_path, data_dir, save_model_dir, pretrained_model_path=None, starting_epoch=0):
 
     with open(config_file, 'r') as f:
         config = yaml.safe_load(f)
@@ -23,8 +23,8 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None
     tokenizer = Tokenizer.from_file(tokenizer_path)
 
     # Model
-    if model_path:
-        model = load_model(model_path)
+    if pretrained_model_path:
+        model = load_model(pretrained_model_path)
     else:
         model_config = LanguageModelConfig(
             vocab_size=tokenizer.get_vocab_size(),
@@ -64,6 +64,7 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None
         criterion=criterion,
         model_dir=save_model_dir,
     )
+    trainer.current_epoch = starting_epoch
     
     trainer.fit(
         train_loader=train_loader,
@@ -74,8 +75,9 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, model_path=None
 if __name__ == "__main__":
     train(
         config_file=CONFIG_FILE,
-        tokenizer_path=TOKENIZER_PATH,
+        tokenizer_path='tokenizers/polish-splade.json',
         data_dir=DATA_DIR,
-        save_model_dir=SAVE_MODEL_DIR,
-        model_path=MODEL_PATH
+        save_model_dir='models/model-splade',
+        pretrained_model_path=PRETRAINED_MODEL_PATH,
+        starting_epoch=7
     )

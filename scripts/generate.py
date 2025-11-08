@@ -2,11 +2,11 @@ from tokenizers import Tokenizer
 from src.utils.model_utils import load_model
 from src.inference.generator import Generator
 
-MODEL_DIR = "models/base-1/checkpoint_10"
-TOKENIZER_PATH = "models/base-1/tokenizer.json"
-PROMPT = """Dlaczego. """
+MODEL_DIR = "models/model-bpe/checkpoint_6"
+TOKENIZER_PATH = "models/model-bpe/tokenizer.json"
+PROMPT = """Miłość jest"""
 MAX_NEW_TOKENS = 32
-TEMPERATURE = 1.0
+TEMPERATURE = 0.7
 
 
 def generate(prompt, model_dir, tokenizer_path, max_new_tokens, temperature):

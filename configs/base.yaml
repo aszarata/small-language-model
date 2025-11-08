@@ -9,7 +9,7 @@ model:
 training:
   batch_size: 64
   learning_rate: 5e-5
-  epochs: 10
+  epochs: 6
   max_seq_len: 128
 
 data:

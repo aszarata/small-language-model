@@ -23,7 +23,7 @@ class Trainer:
         self.current_epoch = 0
 
         self.logger = setup_logger(name="Trainer", log_dir=f"{model_dir}/logs/training")
-        self.model_dir = None
+        self.model_dir = model_dir
 
         self.save_tokenizer()
 
