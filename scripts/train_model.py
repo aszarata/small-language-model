@@ -75,9 +75,9 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, pretrained_mode
 if __name__ == "__main__":
     train(
         config_file=CONFIG_FILE,
-        tokenizer_path='tokenizers/polish-splade.json',
+        tokenizer_path=TOKENIZER_PATH,
         data_dir=DATA_DIR,
-        save_model_dir='models/model-splade',
+        save_model_dir=SAVE_MODEL_DIR,
         pretrained_model_path=PRETRAINED_MODEL_PATH,
-        starting_epoch=7
+        starting_epoch=0
     )

@@ -4,9 +4,9 @@ from src.inference.generator import Generator
 
 MODEL_DIR = "models/model-bpe/checkpoint_6"
 TOKENIZER_PATH = "models/model-bpe/tokenizer.json"
-PROMPT = """Miłość jest"""
+PROMPT = """Pałac, którego już nie ma stoi na"""
 MAX_NEW_TOKENS = 32
-TEMPERATURE = 0.7
+TEMPERATURE = 0
 
 
 def generate(prompt, model_dir, tokenizer_path, max_new_tokens, temperature):

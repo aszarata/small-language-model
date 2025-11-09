@@ -3,8 +3,14 @@ import requests
 from urllib.parse import urljoin
 
 BASE_URL = "https://wolnelektury.pl"
-DATA_DIR = "data/base/train"
-AUTHORS = ["henryk-sienkiewicz", "fiodor-dostojewski", "michail-bulhakow"]
+
+# === TRAIN ===
+# DATA_DIR = "data/base/train"
+# AUTHORS = ["henryk-sienkiewicz", "fiodor-dostojewski", "michail-bulhakow"]
+
+# === TEST ===
+DATA_DIR = "data/base/test"
+AUTHORS = ["zofia-nalkowska"]
 
 def download_author_texts(author):
     api_url = f"{BASE_URL}/api/authors/{author}/books/"

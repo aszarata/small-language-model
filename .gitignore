@@ -1,3 +1,7 @@
+# IDE
+.vscode
+.idea
+
 # Python-generated files
 __pycache__/
 *.py[oc]
@@ -14,3 +18,4 @@ wheels/
 /models/
 /tokenizers/
 /logs/
+/evaluation-results/
