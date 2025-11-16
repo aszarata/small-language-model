@@ -2,6 +2,8 @@ import os
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
+import torch.nn as nn
+import time
 from src.utils.logger import setup_logger
 
 # Perplexity TODO
@@ -32,30 +34,64 @@ class EvaluationMetrics:
     def calculate_mean_perplexity(self, dataloader):
         self.model.eval()
         self.logger.info("Calculating perplexity score.")
+        loss_fn = nn.CrossEntropyLoss(ignore_index=self.tokenizer.token_to_id("<pad>"))
         total_tokens, total_loss = 0, 0.0
+
         with torch.no_grad():
-            for (x, y) in tqdm(dataloader, desc="Perplexity score"):
+            for x, y in tqdm(dataloader, desc="Perplexity score"):
                 x, y = x.to(self.device), y.to(self.device)
                 logits = self.model(x)
+                loss = loss_fn(logits.view(-1, logits.size(-1)), y.view(-1))
+                total_loss += loss.item() * y.numel()
+                total_tokens += y.numel()
 
-                log_probs = F.log_softmax(logits, dim=-1)
-                target_log_probs = log_probs.gather(
-                    dim=-1,
-                    index=y.unsqueeze(-1)
-                ).squeeze(-1)
-
-                mask = (y != self.tokenizer.token_to_id("<pad>"))
-                masked_log_probs = target_log_probs * mask
-
-                negative_log_likelihood = -masked_log_probs.sum()
-                total_loss += negative_log_likelihood.item()
-                total_tokens += mask.sum().item()
-        
-        mean_nll = total_loss / total_tokens
-        perplexity = torch.exp(torch.tensor(mean_nll))
+        mean_loss = total_loss / total_tokens
+        perplexity = torch.exp(torch.tensor(mean_loss))
         self.logger.info(f"Finished calculating perplexity. Perplexity score: {perplexity:.4f}")
-
+        
         return perplexity
+    
+    def calculate_word_level_perplexity(self, dataloader):
+        self.model.eval()
+        self.logger.info("Calculating word-level perplexity.")
+        loss_fn = nn.CrossEntropyLoss(ignore_index=self.tokenizer.token_to_id("<pad>"))
+        total_words, total_loss = 0, 0.0
+
+        with torch.no_grad():
+            for x, y in tqdm(dataloader, desc="Word-level PPL"):
+                x, y = x.to(self.device), y.to(self.device)
+                logits = self.model(x)
+                loss = loss_fn(logits.view(-1, logits.size(-1)), y.view(-1))
+                text = self.tokenizer.decode(x[0].tolist(), skip_special_tokens=True)
+                words = text.strip().split()
+                total_words += len(words)
+                total_loss += loss.item() * len(words)
+
+        mean_loss = total_loss / total_words
+        perplexity = torch.exp(torch.tensor(mean_loss))
+        self.logger.info(f"Word-level perplexity: {perplexity:.4f}")
+        return perplexity
+    
+    def calculate_character_level_perplexity(self, dataloader):
+        self.model.eval()
+        self.logger.info("Calculating character-level perplexity.")
+        loss_fn = nn.CrossEntropyLoss(ignore_index=self.tokenizer.token_to_id("<pad>"))
+        total_chars, total_loss = 0, 0.0
+
+        with torch.no_grad():
+            for x, y in tqdm(dataloader, desc="Character-level PPL"):
+                x, y = x.to(self.device), y.to(self.device)
+                logits = self.model(x)
+                loss = loss_fn(logits.view(-1, logits.size(-1)), y.view(-1))
+                text = self.tokenizer.decode(x[0].tolist(), skip_special_tokens=True)
+                total_chars += len(text)
+                total_loss += loss.item() * len(text)
+
+        mean_loss = total_loss / total_chars
+        perplexity = torch.exp(torch.tensor(mean_loss))
+        self.logger.info(f"Character-level perplexity: {perplexity:.4f}")
+        return perplexity
+
     
     def calculate_oov_rate(self, data_dir):
         texts = self._load_texts(data_dir)
@@ -97,6 +133,30 @@ class EvaluationMetrics:
         percent_in_dict = (in_dict / total_words) * 100 if total_words > 0 else 0
         self.logger.info(f"Words in dictionary: {in_dict}/{total_words} ({percent_in_dict:.2f}%)")
         return in_dict, percent_in_dict
+    
+    def calculate_tokenizer_throughput(self, dataloader):
+        self.model.eval()
+        self.logger.info("Calculating tokenizer throughput.")
+        total_tokens = 0
+        total_time = 0.0
+
+        with torch.no_grad():
+            for x, _ in tqdm(dataloader, desc="Tokenizer throughput"):
+                x = x.to(self.device)
+
+                t0 = time.time()
+
+                logits = self.model(x)
+            
+                elapsed = time.time() - t0
+
+                total_tokens += x.numel()
+                total_time += elapsed
+
+        throughput = total_tokens / total_time if total_time > 0 else 0
+        self.logger.info(f"Tokenizer throughput: {throughput:.2f} tokens/s")
+        return throughput
+
     
     def _load_texts(self, data_dir):
         texts = []
