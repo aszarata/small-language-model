@@ -3,9 +3,10 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from src.utils.logger import setup_logger
+import matplotlib.pyplot as plt
 
 class Trainer:
-    def __init__(self, model, optimizer, criterion, tokenizer, device=None, model_dir=None):
+    def __init__(self, model, optimizer, criterion, tokenizer, device=None, model_dir=None, classification=False):
         if not device:
             if torch.backends.mps.is_available():
                 device = 'mps'
@@ -21,9 +22,15 @@ class Trainer:
         self.criterion = criterion
         self.tokenizer = tokenizer
         self.current_epoch = 0
+        self.classification = classification
 
         self.logger = setup_logger(name="Trainer", log_dir=f"{model_dir}/logs/training")
         self.model_dir = model_dir
+
+        self.train_losses = []
+        self.val_losses = []
+
+        self.best_val_loss = torch.inf
 
         self.save_tokenizer()
 
@@ -31,15 +38,19 @@ class Trainer:
         self.model.train()
         total_loss = 0
         with tqdm(dataloader, desc="Training") as pbar:
-            for (x, y) in pbar:
+            for batch in pbar:
+                x, y = batch['input_ids'], batch['labels']
                 x, y = x.to(self.device), y.to(self.device)
                 self.optimizer.zero_grad()
                 
                 out = self.model(x)
-                loss = self.criterion(
-                    out.view(-1, out.size(-1)), 
-                    y.view(-1)
-                )
+                if not self.classification:
+                    loss = self.criterion(
+                        out.view(-1, out.size(-1)), 
+                        y.view(-1)
+                    )
+                else:
+                    loss = self.criterion(out, y)
 
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
@@ -54,18 +65,28 @@ class Trainer:
         self.model.eval()
         total_loss = 0
         with torch.no_grad():
-            for (x, y) in tqdm(dataloader, desc="Validation"):
+            for batch in tqdm(dataloader, desc="Validation"):
+                x, y = batch['input_ids'], batch['labels']
                 x, y = x.to(self.device), y.to(self.device)
-                with torch.autocast(device_type=self.device, dtype=torch.float16):
-                    out = self.model(x)
+                out = self.model(x)
+                if not self.classification:
                     loss = self.criterion(
                         out.view(-1, out.size(-1)), 
                         y.view(-1)
                     )
+                else:
+                    loss = self.criterion(out, y)
                 total_loss += loss.item()
-        return total_loss / len(dataloader)
 
-    def fit(self, train_loader, val_loader=None, epochs=10):
+        val_loss = total_loss / len(dataloader)
+
+        if val_loss < self.best_val_loss:
+            self.best_val_loss = val_loss
+            self.save_snapshot(name="best")
+            
+        return val_loss
+
+    def fit(self, train_loader, val_loader=None, epochs=10, save_shapshot_every=5):
         start_epoch = self.current_epoch + 1
         end_epoch = self.current_epoch + epochs + 1
 
@@ -77,13 +98,22 @@ class Trainer:
             self.current_epoch = epoch
             train_loss = self.train_epoch(train_loader)
             val_loss = self.eval_epoch(val_loader) if val_loader else None
-            self.logger.info(f"Epoch {epoch}: train_loss={train_loss:.4f}" + (f", val_loss={val_loss:.4f}" if val_loss else ""))
-            self.save_snapshot()
 
-    def save_snapshot(self):
+            self.train_losses.append(train_loss)
+            if val_loader is not None: self.val_losses.append(val_loss)
+
+            self.logger.info(f"Epoch {epoch}: train_loss={train_loss:.4f}" + (f", val_loss={val_loss:.4f}" if val_loss else ""))
+
+            if (self.current_epoch) % save_shapshot_every == 0:
+                self.save_snapshot(name=f"checkpoint_{self.current_epoch}")
+            
+            self.save_snapshot()
+            self.save_loss_plot()
+
+    def save_snapshot(self, name="last"):
         if not self.model_dir:
             return
-        output_dir = f"{self.model_dir}/checkpoint_{self.current_epoch}"
+        output_dir = f"{self.model_dir}/{name}"
         os.makedirs(output_dir, exist_ok=True)
 
         self.model.config.save(f"{output_dir}/config.json")
@@ -95,3 +125,15 @@ class Trainer:
             return
         os.makedirs(self.model_dir, exist_ok=True)
         self.tokenizer.save(f"{self.model_dir}/tokenizer.json")
+
+    def save_loss_plot(self):
+        plt.figure()
+        plt.plot(self.train_losses, label='Train Loss')
+        if self.val_losses:
+            plt.plot(self.val_losses, label='Val Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.legend()
+        plt.title('Training and Validation Loss')
+        plt.savefig(f'{self.model_dir}/loss_plot.png')
+        plt.close()

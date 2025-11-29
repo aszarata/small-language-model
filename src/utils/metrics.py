@@ -38,7 +38,8 @@ class EvaluationMetrics:
         total_tokens, total_loss = 0, 0.0
 
         with torch.no_grad():
-            for x, y in tqdm(dataloader, desc="Perplexity score"):
+            for batch in tqdm(dataloader, desc="Perplexity score"):
+                x, y = batch['input_ids'], batch['labels']
                 x, y = x.to(self.device), y.to(self.device)
                 logits = self.model(x)
                 loss = loss_fn(logits.view(-1, logits.size(-1)), y.view(-1))

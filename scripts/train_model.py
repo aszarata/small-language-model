@@ -1,20 +1,21 @@
 import yaml
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from src.model.model_config import LanguageModelConfig
 from src.model.transformer_model import LanguageModel
 from src.training.trainer import Trainer
 from src.data.text_dataset import TextDataset
+from src.data.hf_dataset_processor import HFDatasetProcessor
 from src.utils.model_utils import load_model
 from tokenizers import Tokenizer
 
-CONFIG_FILE = "configs/base.yaml"
-TOKENIZER_PATH = "tokenizers/bpe.json"
-DATA_DIR = "data/base/train"
-SAVE_MODEL_DIR = "models/model-bpe"
-PRETRAINED_MODEL_PATH = "models/model-bpe/checkpoint_6"
+CONFIG_FILE = "configs/small-plwiki.yaml"
+TOKENIZER_PATH = "tokenizers/polish-splade.json"
+SAVE_MODEL_DIR = "models/model-plwiki"
+PRETRAINED_MODEL_PATH = "models/model-plwiki/best"
+VALIDATION_SET_PERC = 0.1
 
-def train(config_file, tokenizer_path, data_dir, save_model_dir, pretrained_model_path=None, starting_epoch=0):
+def train(config_file, tokenizer_path, save_model_dir, pretrained_model_path=None, starting_epoch=0, validation_set_perc=0.1):
 
     with open(config_file, 'r') as f:
         config = yaml.safe_load(f)
@@ -38,16 +39,35 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, pretrained_mode
         model = LanguageModel(model_config)
 
     # Data
-    dataset = TextDataset(
-        data_dir=data_dir,
+    # dataset = TextDataset(
+    #     data_dir=data_dir,
+    #     tokenizer=tokenizer,
+    #     seq_len=config["training"]["max_seq_len"]
+    # )
+    hf_dataset_processor = HFDatasetProcessor(
+        data_path=config["data"]["dataset_path"],
         tokenizer=tokenizer,
-        seq_len=config["training"]["max_seq_len"]
+        max_seq_len=config["training"]["max_seq_len"]
+    )
+    dataset = hf_dataset_processor.get_data()
+
+    train_data, val_data = random_split(
+        dataset=dataset, 
+        lengths=[1 - validation_set_perc, validation_set_perc]
     )
 
     train_loader = DataLoader(
-        dataset=dataset, 
+        dataset=train_data, 
         batch_size=config["training"]["batch_size"],
-        shuffle=True
+        shuffle=True,
+        num_workers=8
+    )
+
+    val_loader = DataLoader(
+        dataset=val_data, 
+        batch_size=config["training"]["batch_size"],
+        shuffle=True,
+        num_workers=8
     )
 
     # Training
@@ -56,7 +76,7 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, pretrained_mode
         lr=float(config["training"]["learning_rate"])
     )
     criterion = torch.nn.CrossEntropyLoss(ignore_index=tokenizer.token_to_id("<pad>"))
-
+    print("STARTED")
     trainer = Trainer(
         model=model,
         tokenizer=tokenizer,
@@ -68,7 +88,9 @@ def train(config_file, tokenizer_path, data_dir, save_model_dir, pretrained_mode
     
     trainer.fit(
         train_loader=train_loader,
+        val_loader=val_loader,
         epochs=config["training"]["epochs"],
+        save_shapshot_every=3
     )
 
     
@@ -76,8 +98,8 @@ if __name__ == "__main__":
     train(
         config_file=CONFIG_FILE,
         tokenizer_path=TOKENIZER_PATH,
-        data_dir=DATA_DIR,
         save_model_dir=SAVE_MODEL_DIR,
         pretrained_model_path=PRETRAINED_MODEL_PATH,
-        starting_epoch=0
+        starting_epoch=1,
+        validation_set_perc=VALIDATION_SET_PERC
     )

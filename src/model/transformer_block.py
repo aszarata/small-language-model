@@ -24,12 +24,10 @@ class TransformerBlock(nn.Module):
 
     def forward(self, x):
         attn_mask = torch.triu(torch.ones(x.size(1), x.size(1), device=x.device), diagonal=1)
-        y, _ = self.m_attention(
-            self.layer_norm1(x), 
-            self.layer_norm1(x), 
-            self.layer_norm1(x), 
-            attn_mask=attn_mask
-        )
+        attn_mask = attn_mask.masked_fill(attn_mask == 1, float('-inf'))
+        
+        norm_x = self.layer_norm1(x)
+        y, _ = self.m_attention(norm_x, norm_x, norm_x, attn_mask=attn_mask)
         y = self.dropout(y)
         
         x = x + y

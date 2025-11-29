@@ -32,4 +32,7 @@ class TextDataset(Dataset):
         chunk = self.tokens[start:end]
         x = chunk[:-1]
         y = chunk[1:]
-        return x, y
+        return {
+            'input_ids': x,
+            'labels': y
+        }
