@@ -49,7 +49,7 @@ python3 -m scripts.build_tokenizer
 - Fetch texts from [Wolne Lektury](https://wolnelektury.pl) for selected authors:  
 
 ```{bash}
-python3 -m scripts.download_data
+python3 -m scripts.dataset.download_wolnelektury
 ```
 
 > Adjust author names according to the Wolne Lektury API.
@@ -59,7 +59,7 @@ python3 -m scripts.download_data
 - Train (or fine-tune) GPT2 with a selected tokenizer and configuration:  
 
 ```{bash}
-python3 -m scripts.train_model
+python3 -m scripts.generation.train_model
 ```
 
 > Specify the `.yaml` config file for architecture, hyperparameters, and training options.
@@ -69,14 +69,14 @@ python3 -m scripts.train_model
 - Generate text from a trained model with a prompt:  
 
 ```{bash}
-python3 -m scripts.generate
+python3 -m scripts.generation.generate
 ```
 
 ### Calculate Metrics
 
 - Compute evaluation metrics for a trained model and tokenizer on test data:  
 ```{bash}
-python3 -m scripts.calculate_metrics
+python3 -m scripts.generation.calculate_metrics
 ```
 
 ## Project Structure

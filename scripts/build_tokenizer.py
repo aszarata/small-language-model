@@ -1,21 +1,22 @@
 from src.data.tokenizer.bpe_tokenizer_builder import BPETokenizerBuilder
 from src.data.tokenizer.whitespace_tokenizer_builder import WhitespaceTokenizerBuilder
 from src.utils.tokenizer_utils import download_pretrained_tokenizer
+from datasets import load_from_disk
 
 # GENERAL
 build_tokenizers = {
     "BPE": True,
-    "Pretrained": True,
-    "Whitespace": True
+    "Pretrained": False,
+    "Whitespace": False
 }
 
-TRAIN_DATA_DIR = "data/base"
+TRAIN_DATA_DIR = "data/plslang"
 TOKENIZERS_OUTPUT_DIR = "tokenizers"
-VOCAB_SIZE = 50_000
+VOCAB_SIZE = 20_000
 MIN_FREQUENCY = 2
 
 # BPE from training data
-BPE_FILE_NAME = "bpe.json"
+BPE_FILE_NAME = "bpe-plslang.json"
 
 # Whitespace from training data
 WS_FILE_NAME = "whitespace.json"
@@ -33,10 +34,13 @@ if __name__ == "__main__":
             min_frequency=MIN_FREQUENCY
         )
 
-        bpe_builder.build_from_directory(
-            data_dir=TRAIN_DATA_DIR,
+        dataset = load_from_disk(TRAIN_DATA_DIR)
+
+        bpe_builder.build_from_dataset(
+            dataset=dataset,
             output_dir=TOKENIZERS_OUTPUT_DIR,
-            output_name=BPE_FILE_NAME
+            output_name=BPE_FILE_NAME,
+            text_column='tekst'
         )
     
     if build_tokenizers["Pretrained"]:

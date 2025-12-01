@@ -10,6 +10,7 @@ class LanguageModelConfig:
     num_heads: int 
     n_layers: int 
     dropout_prob: float = 0.1
+    n_classes: int = None
 
     def save(self, path):
         with open(path, 'w') as f:

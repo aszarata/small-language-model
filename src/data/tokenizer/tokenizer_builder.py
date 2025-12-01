@@ -16,6 +16,10 @@ class TokenizerBuilder:
         if len(paths) == 0:
             raise Exception(f"No .txt files in {data_dir}")
         return self.build(paths, output_path) 
+    
+    def build_from_dataset(self, dataset, output_dir, output_name, text_column):
+        output_path = output_dir + "/" + output_name
+        return self.build(output_path=output_path, dataset=dataset, text_column=text_column)    
 
     def build(self, paths, output_path):
         raise NotImplementedError() 

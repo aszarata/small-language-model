@@ -1,0 +1,20 @@
+model:
+  n_position: 128
+  embed_dim: 128
+  hidden_dim: 96
+  num_heads: 8
+  n_layers: 2
+  dropout_prob: 0.5
+  n_classes: 3
+
+training:
+  batch_size: 32
+  learning_rate: 5e-5
+  epochs: 50
+  max_seq_len: 64
+  weight_decay: 0.01
+
+data:
+  dataset_path: "data/plslang"
+  validation_split: 0.1
+  test_split: 0.1

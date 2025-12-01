@@ -5,7 +5,7 @@ from src.model.model_config import LanguageModelConfig
 from src.model.transformer_model import LanguageModel
 from src.training.trainer import Trainer
 from src.data.text_dataset import TextDataset
-from src.data.hf_dataset_processor import HFDatasetProcessor
+from data.hf_gen_dataset_processor import HFDatasetProcessor
 from src.utils.model_utils import load_model
 from tokenizers import Tokenizer
 
